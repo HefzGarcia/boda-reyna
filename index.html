@@ -1,0 +1,113 @@
+<div id="audio-btn" style="
+    width:56px;
+    height:56px;
+    background:#ffffff;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-shadow:0 2px 6px rgba(0,0,0,0.25);
+    cursor:pointer;
+    transition:transform 0.15s ease;
+    margin:0 auto;
+" onclick="toggleAudio()"
+   onmouseover="this.style.transform='scale(1.08)'"
+   onmouseout="this.style.transform='scale(1)'">
+
+  <svg id="icon-play" width="20" height="20" viewBox="0 0 24 24" style="margin-left:3px;">
+    <polygon points="6,4 20,12 6,20" fill="#000000"/>
+  </svg>
+
+  <svg id="icon-pause" width="20" height="20" viewBox="0 0 24 24" style="display:none;">
+    <rect x="6" y="4" width="4" height="16" fill="#000000"/>
+    <rect x="14" y="4" width="4" height="16" fill="#000000"/>
+  </svg>
+
+  <svg id="icon-reload" width="20" height="20" viewBox="0 0 24 24" style="display:none;">
+    <path fill="#000000" d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/>
+  </svg>
+</div>
+
+<p id="status-msg" style="text-align:center; color:#555; font-size:13px; margin-top:8px;">Cargando reproductor...</p>
+
+<!-- Contenedor donde se monta el reproductor de YouTube (oculto, fuera de pantalla) -->
+<div style="position:absolute; left:-9999px; top:-9999px;">
+  <div id="yt-player"></div>
+</div>
+
+<script>
+var VIDEO_ID = "AMaTurchASI";
+
+var iconPlay = document.getElementById('icon-play');
+var iconPause = document.getElementById('icon-pause');
+var iconReload = document.getElementById('icon-reload');
+var statusMsg = document.getElementById('status-msg');
+
+var player;
+var playerReady = false;
+
+function mostrarIcono(nombre) {
+  iconPlay.style.display = 'none';
+  iconPause.style.display = 'none';
+  iconReload.style.display = 'none';
+  if (nombre === 'play') iconPlay.style.display = 'block';
+  if (nombre === 'pause') iconPause.style.display = 'block';
+  if (nombre === 'reload') iconReload.style.display = 'block';
+}
+
+// Carga el script oficial de la API de YouTube
+var tag = document.createElement('script');
+tag.src = "https://www.youtube.com/iframe_api";
+document.head.appendChild(tag);
+
+// La API llama esta función global automáticamente cuando está lista
+window.onYouTubeIframeAPIReady = function () {
+  player = new YT.Player('yt-player', {
+    height: '200',
+    width: '200',
+    videoId: VIDEO_ID,
+    playerVars: {
+      'playsinline': 1,
+      'controls': 0,
+      'disablekb': 1
+    },
+    events: {
+      'onReady': function () {
+        playerReady = true;
+        statusMsg.textContent = 'Reproductor listo. Dale clic al círculo.';
+        statusMsg.style.color = '#2e7d32';
+      },
+      'onStateChange': function (event) {
+        if (event.data === YT.PlayerState.PLAYING) {
+          mostrarIcono('pause');
+        } else if (event.data === YT.PlayerState.PAUSED) {
+          mostrarIcono('play');
+        } else if (event.data === YT.PlayerState.ENDED) {
+          mostrarIcono('reload');
+        }
+      },
+      'onError': function (e) {
+        statusMsg.textContent = 'ERROR al cargar el video de YouTube (código ' + e.data + ').';
+        statusMsg.style.color = '#c0392b';
+      }
+    }
+  });
+};
+
+function toggleAudio() {
+  if (!playerReady) {
+    statusMsg.textContent = 'El reproductor todavía no está listo, espera un momento.';
+    statusMsg.style.color = '#c0392b';
+    return;
+  }
+  var estado = player.getPlayerState();
+  if (estado === YT.PlayerState.ENDED) {
+    player.seekTo(0);
+    player.playVideo();
+  } else if (estado === YT.PlayerState.PLAYING) {
+    player.pauseVideo();
+  } else {
+    player.playVideo();
+  }
+}
+</script>

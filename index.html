@@ -28,23 +28,16 @@
   </svg>
 </div>
 
-<p id="status-msg" style="text-align:center; color:#555; font-size:13px; margin-top:8px;">Cargando reproductor...</p>
-
-<!-- Contenedor donde se monta el reproductor de YouTube (oculto, fuera de pantalla) -->
-<div style="position:absolute; left:-9999px; top:-9999px;">
-  <div id="yt-player"></div>
-</div>
+<!-- Audio real, hospedado en el mismo repositorio -->
+<audio id="mi-audio" preload="none" style="display:none;">
+  <source src="Lover-Taylor%20Swift-Violin%20Performance.mp3" type="audio/mpeg">
+</audio>
 
 <script>
-var VIDEO_ID = "AMaTurchASI";
-
+var audio = document.getElementById('mi-audio');
 var iconPlay = document.getElementById('icon-play');
 var iconPause = document.getElementById('icon-pause');
 var iconReload = document.getElementById('icon-reload');
-var statusMsg = document.getElementById('status-msg');
-
-var player;
-var playerReady = false;
 
 function mostrarIcono(nombre) {
   iconPlay.style.display = 'none';
@@ -55,59 +48,20 @@ function mostrarIcono(nombre) {
   if (nombre === 'reload') iconReload.style.display = 'block';
 }
 
-// Carga el script oficial de la API de YouTube
-var tag = document.createElement('script');
-tag.src = "https://www.youtube.com/iframe_api";
-document.head.appendChild(tag);
-
-// La API llama esta función global automáticamente cuando está lista
-window.onYouTubeIframeAPIReady = function () {
-  player = new YT.Player('yt-player', {
-    height: '200',
-    width: '200',
-    videoId: VIDEO_ID,
-    playerVars: {
-      'playsinline': 1,
-      'controls': 0,
-      'disablekb': 1
-    },
-    events: {
-      'onReady': function () {
-        playerReady = true;
-        statusMsg.textContent = 'Reproductor listo. Dale clic al círculo.';
-        statusMsg.style.color = '#2e7d32';
-      },
-      'onStateChange': function (event) {
-        if (event.data === YT.PlayerState.PLAYING) {
-          mostrarIcono('pause');
-        } else if (event.data === YT.PlayerState.PAUSED) {
-          mostrarIcono('play');
-        } else if (event.data === YT.PlayerState.ENDED) {
-          mostrarIcono('reload');
-        }
-      },
-      'onError': function (e) {
-        statusMsg.textContent = 'ERROR al cargar el video de YouTube (código ' + e.data + ').';
-        statusMsg.style.color = '#c0392b';
-      }
-    }
-  });
-};
-
 function toggleAudio() {
-  if (!playerReady) {
-    statusMsg.textContent = 'El reproductor todavía no está listo, espera un momento.';
-    statusMsg.style.color = '#c0392b';
+  if (audio.ended) {
+    audio.currentTime = 0;
+    audio.play();
     return;
   }
-  var estado = player.getPlayerState();
-  if (estado === YT.PlayerState.ENDED) {
-    player.seekTo(0);
-    player.playVideo();
-  } else if (estado === YT.PlayerState.PLAYING) {
-    player.pauseVideo();
+  if (audio.paused) {
+    audio.play();
   } else {
-    player.playVideo();
+    audio.pause();
   }
 }
+
+audio.addEventListener('play', function () { mostrarIcono('pause'); });
+audio.addEventListener('pause', function () { if (!audio.ended) mostrarIcono('play'); });
+audio.addEventListener('ended', function () { mostrarIcono('reload'); });
 </script>
